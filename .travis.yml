@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rikertothebridge/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true rikertothebridge/react-test npm test
+
+after_success:
+  - docker build -t rikertothebridge/multi-client ./client
+  - docker build -t rikertothebridge/multi-nginx ./nginx
+  - docker build -t rikertothebridge/multi-server ./server
+  - docker build -t rikertothebridge/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push rikertothebridge/multi-client
+  - docker push rikertothebridge/multi-nginx 
+  - docker push rikertothebridge/multi-server
+  - docker push rikertothebridge/multi-worker
